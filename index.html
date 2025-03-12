@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nicotine Use Trends (1920-2024)</title>
-    <script src="chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -92,8 +92,7 @@
             display: flex;
             flex-direction: column;
             min-width: 200px;
-            height: 170px;
-            /* Reduced height to remove extra space below totals */
+            height: 180px; /* Increased height to give more space */
             background-color: white;
             border-radius: 8px;
             padding: 10px;
@@ -115,13 +114,14 @@
             flex-direction: column;
             flex: 1;
             height: 100%;
-            gap: 6px;
+            gap: 8px;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            padding: 4px 6px;
+            padding: 5px 8px;
+            margin: 2px 0;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -185,16 +185,26 @@
     </div>
 
     <script>
-        // Data for the chart
-        const years = [1920, 1940, 1960, 1980, 2000, 2010, 2015, 2020, 2024];
-
-        const nicotineData = {
+        // Original full dataset - never modified
+        const ORIGINAL_DATA = {
+            years: [1920, 1940, 1960, 1980, 2000, 2010, 2015, 2020, 2024],
             cigarettes: [17, 42, 44, 33, 23, 19, 15, 12.5, 10.5],
             otherCombustible: [15, 10, 6, 4, 3, 2, 2, 2, 1.5],
             smokeless: [8, 7, 6, 5, 4, 3, 3, 2.5, 2.5],
             eCigarettes: [0, 0, 0, 0, 0.05, 0.8, 3.5, 3.5, 5],
             nicotinePouches: [0, 0, 0, 0, 0, 0, 0.05, 1.5, 3.5],
             nrt: [0, 0, 0, 0.5, 1, 1.5, 1.8, 2, 2],
+        };
+
+        // Working copies that will be modified when zooming
+        let years = [...ORIGINAL_DATA.years];
+        const nicotineData = {
+            cigarettes: [...ORIGINAL_DATA.cigarettes],
+            otherCombustible: [...ORIGINAL_DATA.otherCombustible],
+            smokeless: [...ORIGINAL_DATA.smokeless],
+            eCigarettes: [...ORIGINAL_DATA.eCigarettes],
+            nicotinePouches: [...ORIGINAL_DATA.nicotinePouches],
+            nrt: [...ORIGINAL_DATA.nrt],
         };
 
         // Calculate combined data
@@ -312,7 +322,7 @@
         // Function to calculate the maximum value among visible datasets
         function calculateMaxVisibleValue() {
             let maxValue = 0;
-            
+
             // Loop through all datasets
             for (let i = 0; i < datasets.length; i++) {
                 // Check if the dataset is visible
@@ -323,10 +333,10 @@
                     maxValue = Math.max(maxValue, datasetMax);
                 }
             }
-            
+
             // Add some padding (10%) to the max value for better visualization
             maxValue = maxValue * 1.1;
-            
+
             // Round to a nice number (ceiling to nearest 5 or 10)
             if (maxValue <= 10) {
                 return Math.ceil(maxValue / 5) * 5; // Round to nearest 5 for small values
@@ -334,16 +344,16 @@
                 return Math.ceil(maxValue / 10) * 10; // Round to nearest 10 for larger values
             }
         }
-        
+
         // Function to update the y-axis scale based on visible datasets
         function updateYAxisScale() {
             if (!nicotineChart) return;
-            
+
             const maxValue = calculateMaxVisibleValue();
-            
+
             // Update the y-axis scale
             nicotineChart.options.scales.y.max = maxValue;
-            
+
             // Adjust step size based on the max value
             if (maxValue <= 10) {
                 nicotineChart.options.scales.y.ticks.stepSize = 2;
@@ -352,11 +362,11 @@
             } else {
                 nicotineChart.options.scales.y.ticks.stepSize = 10;
             }
-            
+
             // Update the chart
             nicotineChart.update();
         }
-        
+
         // Create the chart with a small delay to ensure PowerPoint's embedded browser is ready
         let nicotineChart;
         function initChart() {
@@ -479,6 +489,46 @@
             const legendContainer = document.getElementById('customLegend');
             legendContainer.innerHTML = ''; // Clear existing content
 
+            // Create a flex container for legend categories and zoom toggle
+            const legendFlexContainer = document.createElement('div');
+            legendFlexContainer.style.display = 'flex';
+            legendFlexContainer.style.width = '100%';
+            legendFlexContainer.style.justifyContent = 'space-between';
+            legendFlexContainer.style.alignItems = 'flex-start';
+
+            // Create a container for the legend categories
+            const categoriesContainer = document.createElement('div');
+            categoriesContainer.style.display = 'flex';
+            categoriesContainer.style.gap = '20px';
+
+            // Create zoom toggle div (now positioned to the right)
+            const zoomToggleDiv = document.createElement('div');
+            zoomToggleDiv.style.display = 'flex';
+            zoomToggleDiv.style.alignItems = 'center';
+            zoomToggleDiv.style.padding = '8px';
+            zoomToggleDiv.style.backgroundColor = 'white';
+            zoomToggleDiv.style.borderRadius = '8px';
+            zoomToggleDiv.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
+
+            const zoomLabel = document.createElement('label');
+            zoomLabel.htmlFor = 'zoomToggle';
+            zoomLabel.style.marginRight = '10px';
+            zoomLabel.textContent = 'Zoom 2000-2024:';
+
+            const zoomCheckbox = document.createElement('input');
+            zoomCheckbox.type = 'checkbox';
+            zoomCheckbox.id = 'zoomToggle';
+
+            zoomToggleDiv.appendChild(zoomLabel);
+            zoomToggleDiv.appendChild(zoomCheckbox);
+
+            // Add the zoom toggle to the flex container (it will be on the right)
+            legendFlexContainer.appendChild(categoriesContainer);
+            legendFlexContainer.appendChild(zoomToggleDiv);
+
+            // Add the flex container to the legend container
+            legendContainer.appendChild(legendFlexContainer);
+
             // Create category containers
             const categories = {
                 'tobacco': {
@@ -530,7 +580,7 @@
                         const spacerCount = 3 - regularItems.length;
                         for (let i = 0; i < spacerCount; i++) {
                             const dummy = document.createElement('div');
-                            dummy.style.height = '26px'; /* Reduced height to remove extra space */
+                            dummy.style.height = '40px'; /* Increased height to fill space better */
                             itemsDiv.appendChild(dummy);
                         }
                     }
@@ -557,7 +607,7 @@
                 }
 
                 categoryDiv.appendChild(itemsDiv);
-                legendContainer.appendChild(categoryDiv);
+                categoriesContainer.appendChild(categoryDiv);
             });
         }
 
@@ -615,10 +665,140 @@
             return itemDiv;
         }
 
+        // No need to store original data separately since we now have ORIGINAL_YEARS and ORIGINAL_DATA constants
+
+        // Setup zoom toggle event listener after legend is created
+        function setupZoomToggle() {
+            const zoomToggle = document.getElementById('zoomToggle');
+            if (!zoomToggle) return;
+
+            // Remove any existing event listeners (to prevent duplicates)
+            zoomToggle.removeEventListener('change', handleZoomToggle);
+
+            // Add the event listener
+            zoomToggle.addEventListener('change', handleZoomToggle);
+        }
+
+        // Handler function for zoom toggle
+        function handleZoomToggle() {
+            // Get all datasets from the chart
+            const chartDatasets = nicotineChart.data.datasets;
+
+            if (this.checked) {
+                // Zoom to 2000-2024
+                console.log("Zooming to 2000-2024");
+
+                // Find the index of year 2000
+                const zoomStartIndex = ORIGINAL_DATA.years.indexOf(2000);
+                if (zoomStartIndex === -1) {
+                    console.error("Year 2000 not found in data");
+                    return;
+                }
+
+                // Update the years array for the chart labels
+                years = ORIGINAL_DATA.years.slice(zoomStartIndex);
+                nicotineChart.data.labels = years;
+
+                // Update each dataset with the zoomed data
+                chartDatasets.forEach(dataset => {
+                    const label = dataset.label;
+
+                    if (label === 'Cigarettes') {
+                        dataset.data = ORIGINAL_DATA.cigarettes.slice(zoomStartIndex);
+                    }
+                    else if (label === 'Other Combustible') {
+                        dataset.data = ORIGINAL_DATA.otherCombustible.slice(zoomStartIndex);
+                    }
+                    else if (label === 'Smokeless') {
+                        dataset.data = ORIGINAL_DATA.smokeless.slice(zoomStartIndex);
+                    }
+                    else if (label === 'E-cigarettes') {
+                        dataset.data = ORIGINAL_DATA.eCigarettes.slice(zoomStartIndex);
+                    }
+                    else if (label === 'Nicotine Pouches') {
+                        dataset.data = ORIGINAL_DATA.nicotinePouches.slice(zoomStartIndex);
+                    }
+                    else if (label === 'Nic Replacement Therapy') {
+                        dataset.data = ORIGINAL_DATA.nrt.slice(zoomStartIndex);
+                    }
+                    else if (label === 'Total Tobacco Products') {
+                        // Recalculate total tobacco
+                        dataset.data = years.map((year, i) => {
+                            const idx = i + zoomStartIndex;
+                            return ORIGINAL_DATA.cigarettes[idx] +
+                                ORIGINAL_DATA.otherCombustible[idx] +
+                                ORIGINAL_DATA.smokeless[idx];
+                        });
+                    }
+                    else if (label === 'Total Non-Tobacco Products') {
+                        // Recalculate total non-tobacco
+                        dataset.data = years.map((year, i) => {
+                            const idx = i + zoomStartIndex;
+                            return ORIGINAL_DATA.eCigarettes[idx] +
+                                ORIGINAL_DATA.nicotinePouches[idx] +
+                                ORIGINAL_DATA.nrt[idx];
+                        });
+                    }
+                });
+            } else {
+                // Reset to original full data
+                console.log("Resetting to original data");
+
+                // Reset the years array for the chart labels
+                years = [...ORIGINAL_DATA.years];
+                nicotineChart.data.labels = years;
+
+                // Update each dataset with the original data
+                chartDatasets.forEach(dataset => {
+                    const label = dataset.label;
+
+                    if (label === 'Cigarettes') {
+                        dataset.data = [...ORIGINAL_DATA.cigarettes];
+                    }
+                    else if (label === 'Other Combustible') {
+                        dataset.data = [...ORIGINAL_DATA.otherCombustible];
+                    }
+                    else if (label === 'Smokeless') {
+                        dataset.data = [...ORIGINAL_DATA.smokeless];
+                    }
+                    else if (label === 'E-cigarettes') {
+                        dataset.data = [...ORIGINAL_DATA.eCigarettes];
+                    }
+                    else if (label === 'Nicotine Pouches') {
+                        dataset.data = [...ORIGINAL_DATA.nicotinePouches];
+                    }
+                    else if (label === 'Nic Replacement Therapy') {
+                        dataset.data = [...ORIGINAL_DATA.nrt];
+                    }
+                    else if (label === 'Total Tobacco Products') {
+                        // Recalculate total tobacco
+                        dataset.data = years.map((year, i) =>
+                            ORIGINAL_DATA.cigarettes[i] +
+                            ORIGINAL_DATA.otherCombustible[i] +
+                            ORIGINAL_DATA.smokeless[i]
+                        );
+                    }
+                    else if (label === 'Total Non-Tobacco Products') {
+                        // Recalculate total non-tobacco
+                        dataset.data = years.map((year, i) =>
+                            ORIGINAL_DATA.eCigarettes[i] +
+                            ORIGINAL_DATA.nicotinePouches[i] +
+                            ORIGINAL_DATA.nrt[i]
+                        );
+                    }
+                });
+            }
+
+            // Update the chart
+            updateYAxisScale();
+            nicotineChart.update();
+        }
+
         // Initialize custom legend after chart is created
         function initLegend() {
             if (nicotineChart) {
                 createCustomLegend();
+                setupZoomToggle(); // Setup zoom toggle after legend is created
 
                 // Calculate and set appropriate y-axis scale
                 updateYAxisScale();
