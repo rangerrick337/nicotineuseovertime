@@ -309,6 +309,54 @@
             }
         ];
 
+        // Function to calculate the maximum value among visible datasets
+        function calculateMaxVisibleValue() {
+            let maxValue = 0;
+            
+            // Loop through all datasets
+            for (let i = 0; i < datasets.length; i++) {
+                // Check if the dataset is visible
+                if (nicotineChart && nicotineChart.isDatasetVisible(i)) {
+                    // Find the maximum value in this dataset
+                    const datasetMax = Math.max(...datasets[i].data);
+                    // Update the overall maximum if this dataset has a higher value
+                    maxValue = Math.max(maxValue, datasetMax);
+                }
+            }
+            
+            // Add some padding (10%) to the max value for better visualization
+            maxValue = maxValue * 1.1;
+            
+            // Round to a nice number (ceiling to nearest 5 or 10)
+            if (maxValue <= 10) {
+                return Math.ceil(maxValue / 5) * 5; // Round to nearest 5 for small values
+            } else {
+                return Math.ceil(maxValue / 10) * 10; // Round to nearest 10 for larger values
+            }
+        }
+        
+        // Function to update the y-axis scale based on visible datasets
+        function updateYAxisScale() {
+            if (!nicotineChart) return;
+            
+            const maxValue = calculateMaxVisibleValue();
+            
+            // Update the y-axis scale
+            nicotineChart.options.scales.y.max = maxValue;
+            
+            // Adjust step size based on the max value
+            if (maxValue <= 10) {
+                nicotineChart.options.scales.y.ticks.stepSize = 2;
+            } else if (maxValue <= 30) {
+                nicotineChart.options.scales.y.ticks.stepSize = 5;
+            } else {
+                nicotineChart.options.scales.y.ticks.stepSize = 10;
+            }
+            
+            // Update the chart
+            nicotineChart.update();
+        }
+        
         // Create the chart with a small delay to ensure PowerPoint's embedded browser is ready
         let nicotineChart;
         function initChart() {
@@ -385,7 +433,7 @@
                                 padding: { top: 0, left: 0, right: 5, bottom: 0 }
                             },
                             min: 0,
-                            max: 60,
+                            suggestedMax: 60, // Changed from fixed max to suggestedMax
                             ticks: {
                                 stepSize: 10,
                                 callback: function (value) {
@@ -560,8 +608,8 @@
                     this.classList.remove('hidden');
                 }
 
-                // Force chart update
-                nicotineChart.update();
+                // Update y-axis scale based on visible datasets
+                updateYAxisScale();
             });
 
             return itemDiv;
@@ -572,8 +620,8 @@
             if (nicotineChart) {
                 createCustomLegend();
 
-                // Force initial update
-                nicotineChart.update();
+                // Calculate and set appropriate y-axis scale
+                updateYAxisScale();
             } else {
                 // If chart isn't ready yet, try again in a moment
                 setTimeout(initLegend, 100);
