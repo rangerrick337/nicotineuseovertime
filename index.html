@@ -194,6 +194,7 @@
             smokeless: [8, 7, 6, 5, 4, 3, 3, 2.5, 2.5],
             eCigarettes: [0, 0, 0, 0, 0.05, 0.8, 3.5, 3.5, 5],
             nicotinePouches: [0, 0, 0, 0, 0, 0, 0.05, 1.5, 3.5],
+            nrt: [0, 0, 0, 0.5, 1, 1.5, 1.8, 2, 2],
         };
 
         // Calculate combined data
@@ -202,7 +203,7 @@
         );
 
         const nonTobacco = years.map((year, i) =>
-            nicotineData.eCigarettes[i] + nicotineData.nicotinePouches[i]
+            nicotineData.eCigarettes[i] + nicotineData.nicotinePouches[i] + nicotineData.nrt[i]
         );
 
         // Chart configuration
@@ -282,6 +283,18 @@
                 order: 2
             },
             {
+                label: 'Nic Replacement Therapy',
+                data: nicotineData.nrt,
+                borderColor: '#00bcd4',
+                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'non-tobacco',
+                order: 3
+            },
+            {
                 label: 'Total Non-Tobacco Products',
                 data: nonTobacco,
                 borderColor: '#607d8b',
@@ -292,7 +305,7 @@
                 tension: 0.3,
                 group: 'non-tobacco',
                 isTotal: true,
-                order: 3
+                order: 4
             }
         ];
 
