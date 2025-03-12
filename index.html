@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nicotine Use Trends (1900-2024)</title>
+    <script src="chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .page-container {
+            width: 1080px; /* As requested by user, at least 1080px width */
+            height: 810px; /* 4:3 ratio (1080 ÷ 4 × 3 = 810) */
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 55%; /* Allocate 55% of container height to chart */
+            margin-bottom: 10px;
+        }
+        .description {
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .description p {
+            margin: 0;
+        }
+        
+        /* Custom Legend Styles */
+        .custom-legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .legend-category {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            height: 170px; /* Reduced height to remove extra space below totals */
+            background-color: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .legend-category-title {
+            font-weight: bold;
+            font-size: 15px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #eaeaea;
+            text-align: center;
+        }
+        .legend-items {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            height: 100%;
+            gap: 6px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .legend-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .legend-item.hidden {
+            opacity: 0.5;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+        .legend-label {
+            font-size: 14px;
+        }
+        .legend-total {
+            margin-top: 0;
+            padding-top: 8px;
+            border-top: 1px dashed #eaeaea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <h1>Nicotine Use Trends (1900-2024)</h1>
+        <div class="chart-container">
+            <canvas id="nicotineChart"></canvas>
+            <!-- Fallback content in case JavaScript doesn't execute -->
+            <noscript>
+                <div style="text-align: center; padding: 20px; color: #e74c3c;">
+                    <h3>JavaScript is required to view this chart</h3>
+                    <p>This chart shows nicotine use trends from 1900-2024 across different product categories.</p>
+                </div>
+            </noscript>
+        </div>
+        <div class="custom-legend-container" id="customLegend">
+            <!-- Legend will be inserted here by JavaScript -->
+        </div>
+        <div class="description">
+            <p>This chart shows the percentage of nicotine use across different product categories from 1900 to 2024. Click on the legend items to toggle visibility of each category. Hover over data points to see exact values.</p>
+        </div>
+    </div>
+
+    <script>
+        // Data for the chart
+        const years = [1900, 1920, 1940, 1960, 1980, 2000, 2010, 2015, 2020, 2024];
+
+        const nicotineData = {
+            cigarettes: [5, 17, 42, 44, 33, 23, 19, 15, 12.5, 10.5],
+            otherCombustible: [18, 15, 10, 6, 4, 3, 2, 2, 2, 1.5],
+            smokeless: [10, 8, 7, 6, 5, 4, 3, 3, 2.5, 2.5],
+            eCigarettes: [0, 0, 0, 0, 0, 0.05, 0.8, 3.5, 3.5, 5],
+            nicotinePouches: [0, 0, 0, 0, 0, 0, 0, 0.05, 1.5, 3.5],
+        };
+
+        // Calculate combined data
+        const tobacco = years.map((year, i) =>
+            nicotineData.cigarettes[i] + nicotineData.otherCombustible[i] + nicotineData.smokeless[i]
+        );
+
+        const nonTobacco = years.map((year, i) =>
+            nicotineData.eCigarettes[i] + nicotineData.nicotinePouches[i]
+        );
+
+                // Chart configuration
+        const ctx = document.getElementById('nicotineChart').getContext('2d');
+
+        const datasets = [
+            // Tobacco Products Group
+            {
+                label: 'Cigarettes',
+                data: nicotineData.cigarettes,
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'tobacco'
+            },
+            {
+                label: 'Other Combustible',
+                data: nicotineData.otherCombustible,
+                borderColor: '#f39c12',
+                backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'tobacco'
+            },
+            {
+                label: 'Smokeless',
+                data: nicotineData.smokeless,
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'tobacco'
+            },
+            {
+                label: 'Total Tobacco Products',
+                data: tobacco,
+                borderColor: '#795548',
+                backgroundColor: 'rgba(121, 85, 72, 0.1)',
+                borderWidth: 4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'tobacco',
+                isTotal: true
+            },
+
+            // Non-Tobacco Products Group
+            {
+                label: 'E-cigarettes',
+                data: nicotineData.eCigarettes,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'non-tobacco',
+                order: 1
+            },
+            {
+                label: 'Nicotine Pouches',
+                data: nicotineData.nicotinePouches,
+                borderColor: '#9b59b6',
+                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'non-tobacco',
+                order: 2
+            },
+            {
+                label: 'Total Non-Tobacco Products',
+                data: nonTobacco,
+                borderColor: '#607d8b',
+                backgroundColor: 'rgba(96, 125, 139, 0.1)',
+                borderWidth: 4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                group: 'non-tobacco',
+                isTotal: true,
+                order: 3
+            }
+        ];
+
+                // Create the chart with a small delay to ensure PowerPoint's embedded browser is ready
+        let nicotineChart;
+        function initChart() {
+            nicotineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 5,
+                        right: 10,
+                        bottom: 5,
+                        left: 10
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false, // Hide default legend, we'll use our custom one
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 14
+                        },
+                        padding: 12,
+                        cornerRadius: 6,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            padding: {top: 5, bottom: 2}
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        offset: true,
+                        ticks: {
+                            autoSkip: false,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Percentage of US Adult Population (%)',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            padding: {top: 0, left: 0, right: 5, bottom: 0}
+                        },
+                        min: 0,
+                        max: 70,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            }
+            });
+        }
+
+        // Ensure chart initializes properly in PowerPoint's embedded environment
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(initChart, 100);
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(initChart, 100);
+            });
+        }
+
+        // Create custom legend
+        function createCustomLegend() {
+            const legendContainer = document.getElementById('customLegend');
+            legendContainer.innerHTML = ''; // Clear existing content
+            
+            // Create category containers
+            const categories = {
+                'tobacco': {
+                    title: 'Tobacco Products',
+                    items: []
+                },
+                'non-tobacco': {
+                    title: 'Non-Tobacco Products',
+                    items: []
+                }
+            };
+            
+            // Sort datasets into categories
+            datasets.forEach((dataset, index) => {
+                if (dataset.group && categories[dataset.group]) {
+                    categories[dataset.group].items.push({
+                        dataset,
+                        index,
+                        visible: nicotineChart.isDatasetVisible(index)
+                    });
+                }
+            });
+            
+            // Create legend elements for each category
+            Object.values(categories).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'legend-category';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'legend-category-title';
+                titleDiv.textContent = category.title;
+                categoryDiv.appendChild(titleDiv);
+                
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'legend-items';
+                
+                // Handle each category differently
+                if (category.title === 'Non-Tobacco Products') {
+                    // For Non-Tobacco Products, ensure Total appears in the same vertical position as in Tobacco Products
+                    
+                    // First add all non-total items
+                    const regularItems = category.items.filter(item => !item.dataset.isTotal);
+                    regularItems.forEach(item => {
+                        const itemDiv = createLegendItem(item);
+                        itemsDiv.appendChild(itemDiv);
+                    });
+                    // Add dummy spacer(s) so that regular items count equals 3 (as in Tobacco)
+                    if (regularItems.length < 3) {
+                        const spacerCount = 3 - regularItems.length;
+                        for (let i = 0; i < spacerCount; i++) {
+                        const dummy = document.createElement('div');
+                        dummy.style.height = '26px'; /* Reduced height to remove extra space */
+                        itemsDiv.appendChild(dummy);
+                        }
+                    }
+                    const totalItems = category.items.filter(item => item.dataset.isTotal);
+                    totalItems.forEach(item => {
+                        const itemDiv = createLegendItem(item);
+                        itemDiv.classList.add('legend-total');
+                        itemsDiv.appendChild(itemDiv);
+                    });
+                } else {
+                    const regularItems = category.items.filter(item => !item.dataset.isTotal);
+                    const totalItems = category.items.filter(item => item.dataset.isTotal);
+
+                    regularItems.forEach(item => {
+                        const itemDiv = createLegendItem(item);
+                        itemsDiv.appendChild(itemDiv);
+                    });
+
+                    totalItems.forEach(item => {
+                        const itemDiv = createLegendItem(item);
+                        itemDiv.classList.add('legend-total');
+                        itemsDiv.appendChild(itemDiv);
+                    });
+                }
+
+                categoryDiv.appendChild(itemsDiv);
+                legendContainer.appendChild(categoryDiv);
+            });
+        }
+
+        // Helper function to create a legend item
+        function createLegendItem(item) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'legend-item';
+            if (!item.visible) {
+                itemDiv.classList.add('hidden');
+            }
+            
+            // Check if this is a total item by looking at the dataset object
+            const isTotal = item.dataset.isTotal === true;
+            
+            const colorDiv = document.createElement('div');
+            colorDiv.className = 'legend-color';
+            colorDiv.style.backgroundColor = item.dataset.borderColor;
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'legend-label';
+            labelDiv.textContent = item.dataset.label;
+            
+            itemDiv.appendChild(colorDiv);
+            itemDiv.appendChild(labelDiv);
+            
+            // Store dataset index and other info as data attributes for easier access
+            itemDiv.dataset.index = item.index;
+            itemDiv.dataset.label = item.dataset.label;
+            
+            // Add total styling if this is a total item
+            if (isTotal) {
+                itemDiv.classList.add('legend-total');
+            }
+            
+            // Add click handler
+            itemDiv.addEventListener('click', function() {
+                const index = parseInt(this.dataset.index);
+                console.log(`Toggling visibility for dataset ${index}: ${this.dataset.label}`);
+                
+                // Toggle visibility
+                if (nicotineChart.isDatasetVisible(index)) {
+                    console.log(`Hiding dataset ${index}`);
+                    nicotineChart.setDatasetVisibility(index, false);
+                    this.classList.add('hidden');
+                } else {
+                    console.log(`Showing dataset ${index}`);
+                    nicotineChart.setDatasetVisibility(index, true);
+                    this.classList.remove('hidden');
+                }
+                
+                // Force chart update
+                nicotineChart.update();
+            });
+            
+            return itemDiv;
+        }
+        
+        // Initialize custom legend after chart is created
+        function initLegend() {
+            if (nicotineChart) {
+                createCustomLegend();
+                
+                // Force initial update
+                nicotineChart.update();
+            } else {
+                // If chart isn't ready yet, try again in a moment
+                setTimeout(initLegend, 100);
+            }
+        }
+        
+        // Make sure the chart is fully rendered
+        window.addEventListener('load', function() {
+            // Initialize the legend
+            setTimeout(initLegend, 200);
+        });
+
+    </script>
+</body>
+</html>
