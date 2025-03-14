@@ -4,10 +4,10 @@ An interactive visualization of nicotine use trends from 1900 to 2024 across dif
 
 ## Features
 
-- Interactive line chart showing percentage trends for all nicotine types
+- Interactive stacked bar chart showing percentage trends for all nicotine types
 - Hover functionality to display exact percentage values
-- Toggle functionality to show/hide specific nicotine types
-- Combined lines for tobacco and non-tobacco products
+- Click on legend items to toggle visibility of different nicotine types
+- Combined bars for tobacco and non-tobacco products
 - Responsive design with 4:3 aspect ratio
 
 ## Project Structure
