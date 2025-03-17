@@ -305,7 +305,7 @@ const createChart = (zoomedView = false) => {
                 y1: {
                     position: 'right',
                     beginAtZero: true,
-                    max: 95, // Set max to 95 billion
+                    max: 100, // Set max to 100 billion
                     grid: {
                         display: false
                     },
@@ -317,7 +317,8 @@ const createChart = (zoomedView = false) => {
                             weight: '500'
                         },
                         color: '#2c3e50',
-                        padding: 10
+                        padding: 10,
+                        stepSize: 10
                     },
                     title: {
                         display: true,
