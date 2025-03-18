@@ -11,20 +11,19 @@
         <div class="chart-wrapper">
             <canvas id="nicotineChart"></canvas>
         </div>
-        <div class="info-section">
-            <div class="description-box">
-                This chart displays nicotine market trends from 1920 to 2024. The stacked bars show the percentage of US adult population using different nicotine products (left axis), with each product's segment sized according to its market share. The green line shows US market sales in billions of dollars (right axis). This visualization highlights the shift from traditional tobacco products to newer alternatives over time.
-            </div>
-            <div class="legend-container">
-                <div class="legend-section">
-                    <h3>Market Sales</h3>
+        <div class="legend-container">
+            <div class="legend-section">
+                <h3>Market Sales</h3>
+                <div class="legend-items">
                     <div class="legend-item" data-id="marketSales">
                         <div class="legend-color" style="background-color: #27ae60"></div>
                         <span class="legend-label">US Market Sales</span>
                     </div>
                 </div>
-                <div class="legend-section">
-                    <h3>Nicotine Products</h3>
+            </div>
+            <div class="legend-section">
+                <h3>Nicotine Products</h3>
+                <div class="legend-items">
                     <div class="legend-item" data-id="cigarettes">
                         <div class="legend-color" style="background-color: #bb1008"></div>
                         <span class="legend-label">Cigarettes</span>
@@ -41,12 +40,12 @@
                         <div class="legend-color" style="background-color: #9b59b6"></div>
                         <span class="legend-label">Nicotine Pouches</span>
                     </div>
-                    <div class="zoom-control">
-                        <label>
-                            <input type="checkbox" id="zoomToggle"> Zoom 2000-2024
-                        </label>
-                    </div>
                 </div>
+            </div>
+            <div class="zoom-control">
+                <label>
+                    <input type="checkbox" id="zoomToggle"> Zoom 2000-2024
+                </label>
             </div>
         </div>
     </div>
